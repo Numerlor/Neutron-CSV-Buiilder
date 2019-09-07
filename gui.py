@@ -194,33 +194,29 @@ class MainWindow(QtWidgets.QMainWindow):
                 error_box.setInformativeText(f"The file {file.name} is not a valid CSV file ")
                 with file.open(encoding="utf-8") as csvfile:
                     csv_reader = csv.DictReader(csvfile, delimiter=",")
-                    try:
-                        next(csv_reader)
-                    except UnicodeDecodeError:
-                        error_box.exec_()
-                    else:
-                        self.MainTable.itemChanged.disconnect()
-                        for rows, row in enumerate(csv_reader):
-                            try:
-                                datas =(
-                                    row['System Name'],
-                                    round(float(row['Distance To Arrival']), 2),
-                                    round(float(row['Distance Remaining']), 2),
-                                    int(row['Jumps']))
-                            except (KeyError, ValueError, TypeError):
-                                error_box.exec_()
-                                break
-                            else:
-                                self.MainTable.setRowCount(rows + 1)
-                                for cindex, column in enumerate(datas):
-                                    item = QtWidgets.QTableWidgetItem(str(column))
-                                    item.setTextAlignment(QtCore.Qt.AlignCenter)
-                                    self.MainTable.setItem(rows, cindex, item)
-                        else:
-                            self.MainTable.resizeColumnToContents(0)
-                            self.update_jumps()
+                    self.MainTable.itemChanged.disconnect()
+                    for row_index, row in enumerate(csv_reader):
+                        try:
+                            datas = (
+                                row['System Name'],
+                                round(float(row['Distance To Arrival']), 2),
+                                round(float(row['Distance Remaining']), 2),
+                                int(row['Jumps']))
 
-                        self.MainTable.itemChanged.connect(self.changed, QtCore.Qt.UniqueConnection)
+                        except (KeyError, ValueError, TypeError):
+                            error_box.exec_()
+                            break
+                        else:
+                            self.MainTable.setRowCount(row_index + 1)
+                            for cindex, column in enumerate(datas):
+                                item = QtWidgets.QTableWidgetItem(str(column))
+                                item.setTextAlignment(QtCore.Qt.AlignCenter)
+                                self.MainTable.setItem(row_index, cindex, item)
+                    else:
+                        self.MainTable.resizeColumnToContents(0)
+                        self.update_jumps()
+
+                    self.MainTable.itemChanged.connect(self.changed, QtCore.Qt.UniqueConnection)
 
     def save_file(self):
         topsys = self.MainTable.item(0, 0)
